@@ -1,7 +1,7 @@
 # Hobby Box Expected Value Calculator
 *Pilot: 2026 Topps Chrome Update Basketball*
 
-**Stage:** Problem Framing & Scoping (Stage 01)
+**Progress:** Stage 01 — Problem Framing & Scoping · Stage 02 — Tooling Setup
 
 ## Problem Statement
 
@@ -57,15 +57,48 @@ Goal → Stage → Deliverable
 - Frame the problem and define the EV decision framework → Problem Framing & Scoping (Stage 01) → Problem Statement, Useful Answer & Decision sections (this README)
 - Scope the data sources needed for EV inputs (checklist, odds, comps) → Problem Framing & Scoping (Stage 01) → Assumptions & Constraints section (this README)
 - Define the stakeholder, decision workflow, and risk factors → Problem Framing & Scoping (Stage 01) → Stakeholder & User, Known Unknowns/Risks, and Monitoring Plan sections (this README)
-- Build the EV calculation CLI tool → later stage (post-Stage 01) → working CLI in `src/`
+- Set up a reproducible environment and project scaffold → Tooling Setup (Stage 02) → `requirements.txt`, `src/config.py`, and the `src/ notebooks/ data/ docs/ reports/ model/` tree (see Tooling & Setup)
+- Build the EV calculation CLI tool → later stage (post-Stage 02) → working CLI in `src/`
 - Generalize EV model → later stage (post-Stage 01) → support additional card sets/sports beyond Topps Chrome Update
 - Embed EV tool as web UI → later stage (post-Stage 01) → live feature on [AAA Card Shop](https://aaacardshop.com/)
 
+## Tooling & Setup (Stage 02)
+
+**Environment.** Python 3.14. From the repo root (`bootcamp_alston_huang/`):
+
+```bash
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r project/requirements.txt
+```
+
+`project/requirements.txt` is pinned from the project `.venv` and currently holds only
+what this stage needs — `python-dotenv`, `numpy`, `ipykernel`. It grows as later stages
+add libraries (pandas, scikit-learn, Flask, …).
+
+**Config helper — `src/config.py`.** The one import point for paths and environment,
+moved in from the Stage 02 homework:
+
+- `PROJECT_ROOT`, `RAW_DIR`, `PROCESSED_DIR`, `MODEL_DIR`, `REPORTS_DIR` — resolved from
+  the file's own location, so imports behave the same from `project/`,
+  `project/notebooks/`, or anywhere else.
+- `get_key(name, default)` plus typed `get_bool` / `get_int` / `get_float` env readers.
+- `load_env()` — loads `project/.env` if one exists. The project needs **no secrets**
+  (the dataset is a local transcription), so `.env` is optional, `python-dotenv` is an
+  optional dependency, and a missing `.env` is not an error. `.env` is git-ignored via
+  the repo-root `.gitignore`.
+- `api_port()` / `ev_base_card_value()` — the two override knobs later stages read.
+- `python -m src.config` (from `project/`) prints an environment & config check.
+
 ## Repo Plan
 
-- `data/` — raw and processed data: checklist/odds sheets from [Beckett](https://www.beckett.com/news/2025-26-topps-chrome-update-basketball-cards/), plus sold-comp pulls from eBay, CardHobby, and CardLadder
-- `src/` — CLI tool source code (EV calculation logic, odds/checklist parsing)
-- `notebooks/` — exploratory analysis and prototyping (testing EV formulas, parsing checklist data before it's finalized into `src/`)
+Built out as each stage needs it; `src/` (with `config.py`) exists as of Stage 02.
+
+- `src/` — reusable code: the config helper now; EV calculation and odds/checklist parsing later
+- `notebooks/` — exploratory analysis and prototyping before logic is finalized into `src/`
+- `data/raw/`, `data/processed/` — transcribed checklist/odds sheets from [Beckett](https://www.beckett.com/news/2025-26-topps-chrome-update-basketball-cards/) and sold-comp pulls (eBay, CardHobby, CardLadder), and the rebuilt outputs derived from them
 - `docs/` — stakeholder artifact, data source log, and project notes
+- `reports/` — stakeholder-facing summaries and charts
+- `model/` — pickled model objects
 
 **Update cadence:** `data/` refreshed weekly per the Monitoring Plan; `src/`, `notebooks/`, and `docs/` updated as the tool and scoping evolve.
