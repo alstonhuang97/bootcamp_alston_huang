@@ -1,7 +1,7 @@
 # Hobby Box Expected Value Calculator
 *Pilot: 2026 Topps Chrome Update Basketball*
 
-**Progress:** Stage 01 — Problem Framing & Scoping · Stage 02 — Tooling Setup
+**Progress:** Stage 01 — Problem Framing & Scoping · Stage 02 — Tooling Setup · Stage 03 — Python Fundamentals
 
 ## Problem Statement
 
@@ -58,7 +58,8 @@ Goal → Stage → Deliverable
 - Scope the data sources needed for EV inputs (checklist, odds, comps) → Problem Framing & Scoping (Stage 01) → Assumptions & Constraints section (this README)
 - Define the stakeholder, decision workflow, and risk factors → Problem Framing & Scoping (Stage 01) → Stakeholder & User, Known Unknowns/Risks, and Monitoring Plan sections (this README)
 - Set up a reproducible environment and project scaffold → Tooling Setup (Stage 02) → `requirements.txt`, `src/config.py`, and the `src/ notebooks/ data/ docs/ reports/ model/` tree (see Tooling & Setup)
-- Build the EV calculation CLI tool → later stage (post-Stage 02) → working CLI in `src/`
+- Establish reusable NumPy/pandas helpers → Python Fundamentals (Stage 03) → `src/utils.py` (column cleaner, numeric coercion, summary + groupby helpers), demonstrated on dummy data in `notebooks/python_fundamentals_summary.ipynb`
+- Build the EV calculation CLI tool → later stage (post-Stage 03) → working CLI in `src/`
 - Generalize EV model → later stage (post-Stage 01) → support additional card sets/sports beyond Topps Chrome Update
 - Embed EV tool as web UI → later stage (post-Stage 01) → live feature on [AAA Card Shop](https://aaacardshop.com/)
 
@@ -72,9 +73,9 @@ source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r project/requirements.txt
 ```
 
-`project/requirements.txt` is pinned from the project `.venv` and currently holds only
-what this stage needs — `python-dotenv`, `numpy`, `ipykernel`. It grows as later stages
-add libraries (pandas, scikit-learn, Flask, …).
+`project/requirements.txt` is pinned from the project `.venv` and covers what the stages
+so far need — `python-dotenv`, `numpy`, `pandas`, `ipykernel`. It grows as later stages
+add libraries (scikit-learn, Flask, …).
 
 **Config helper — `src/config.py`.** The one import point for paths and environment,
 moved in from the Stage 02 homework:
@@ -92,10 +93,10 @@ moved in from the Stage 02 homework:
 
 ## Repo Plan
 
-Built out as each stage needs it; `src/` (with `config.py`) exists as of Stage 02.
+Built out as each stage needs it. `src/` holds `config.py` (Stage 02) and `utils.py` (Stage 03) so far.
 
-- `src/` — reusable code: the config helper now; EV calculation and odds/checklist parsing later
-- `notebooks/` — exploratory analysis and prototyping before logic is finalized into `src/`
+- `src/` — reusable code: `config.py` (paths + env), `utils.py` (column cleaning, numeric coercion, summary/groupby helpers); EV calculation and odds/checklist parsing later
+- `notebooks/` — analysis and prototyping before logic is finalized into `src/`; `python_fundamentals_summary.ipynb` (Stage 03) is the first
 - `data/raw/`, `data/processed/` — transcribed checklist/odds sheets from [Beckett](https://www.beckett.com/news/2025-26-topps-chrome-update-basketball-cards/) and sold-comp pulls (eBay, CardHobby, CardLadder), and the rebuilt outputs derived from them
 - `docs/` — stakeholder artifact, data source log, and project notes
 - `reports/` — stakeholder-facing summaries and charts
