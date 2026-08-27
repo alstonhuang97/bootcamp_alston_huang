@@ -1,13 +1,15 @@
 # Hobby Box Expected Value Calculator
 *Pilot: 2026 Topps Chrome Update Basketball*
 
-**Progress:** Stage 01 — Problem Framing & Scoping · Stage 02 — Tooling Setup · Stage 03 — Python Fundamentals
+**Progress:** Stages 01–08 — Problem Framing → Tooling → Python Fundamentals → Data Acquisition → Storage → Preprocessing → Outliers & Risk → EDA
 
 ## Problem Statement
 
 Hobby box collectors across sports and card sets face the same recurring decision: is a box's price justified by the expected value of what's inside? Box prices are set by scarcity and marketing hype around chase cards, but the actual odds and secondary-market comps needed to evaluate that price are scattered across manufacturer odds sheets, checklists, and marketplaces — making it hard for buyers to tell whether they're making a good bet or just paying for hype.
 
-**Pilot scope (Stage 01):** this project starts with the 2026 Topps Chrome Update Series Basketball release, chosen for its high-profile chase cards — NBA Debut Patch Autographs, Alter Egos Inserts, and Minions Variations — some of which have sold for five to seven figures (e.g., recent Alter Egos/Minions sales over $10,000; Cooper Flagg's Debut Patch Auto reportedly worth multiple millions). The goal is to build an expected-value (EV) calculator for this set first, then generalize the approach to other sets and sports.
+**Pilot scope (Stage 01):** the EV framework was first sketched against the 2026 Topps Chrome Update Series Basketball release, chosen for its high-profile chase cards — NBA Debut Patch Autographs, Alter Egos Inserts, and Minions Variations — some of which have sold for five to seven figures (e.g., recent Alter Egos/Minions sales over $10,000; Cooper Flagg's Debut Patch Auto reportedly worth multiple millions).
+
+**Dataset scope (Stage 06+):** data collection covers the **2025-26 Topps NBA basketball** line — Topps' first NBA licence year — across six releases (Topps Chrome, Chrome Update Series, NBA Hoops, Cosmic Chrome, Bowman, Signature Class) and every box format each sells (Hobby, Jumbo, Breakers Delight, Mega, Value Blaster, Hanger, First Day Issue): 29 box configurations in `box_products.csv`. This is the set AAA Card Shop actually stocks right now; the EV framework generalizes to soccer and other sports next.
 
 ## Stakeholder & User
 
@@ -25,9 +27,10 @@ Artifact: a command-line tool that takes a box price and odds/checklist data as 
 
 ## Assumptions & Constraints
 
-- **Data source (checklist/odds):** For this pilot, [Beckett's 2025-26 Topps Chrome Update Basketball checklist](https://www.beckett.com/news/2025-26-topps-chrome-update-basketball-cards/) provides parallels, inserts, and print runs used to identify chase cards and odds context. Beckett publishes similar checklists for most releases, so this same source pattern is expected to generalize to other sets in later stages.
-- **Data source (comps):** eBay, CardHobby, and CardLadder for sold-price comps. This pilot assumes the user already has CardLadder access — common among professional/serious collectors — so it's treated as an available data source rather than a blocker. If the tool later generalizes to casual buyers (per the generalization goal in Lifecycle Mapping), a lower-cost or free comp source may need to be considered.
-- **Data format:** Beckett's checklist and Topps' official odds sheet are published as articles/PDFs, not a structured API — so pulling this data means manual entry or scraping rather than a clean automated feed, at least for this pilot stage.
+- **Data source (checklist/odds):** [checklistinsider.com](https://www.checklistinsider.com/) is the primary structured source for box configuration, parallel print runs, and aggregate pull odds ("1 in N packs for any card in the tier"), cross-checked against Cardboard Connection and Topps Ripped box guides. Full hobby per-tier odds for all six releases (~93% of tier rows); per-format headline odds (any-auto, any-SSP) in `box_products.csv` where published. See [docs/data_dictionary.md](docs/data_dictionary.md).
+- **Data source (box prices):** [blowoutcards.com](https://www.blowoutcards.com/) for current sealed-box retail price; `srp_usd` is Topps' release retail price. dacardworld.com (the requested source) is behind a bot check that blocks automated fetches — non-Hobby formats currently fall back to SRP, flagged `srp_placeholder` in `retail_price_source`.
+- **Data source (comps):** eBay **sold / completed** listings are the primary card-value source (CardLadder as a paid cross-check). Method: representative-subject median per tier → `data/raw/tier_comps.csv`; chase 1/1s valued individually in `data/raw/chase_cards.csv` and weighted by their own pull odds (see [docs/data_dictionary.md](docs/data_dictionary.md)). **Not yet collected** — eBay's sold filter / 130point / CardLadder all block automated fetching, so comps are a manual pull; `card_tiers.est_value_usd` currently holds crude placeholders (`value_basis = rough_estimate_v0`). `src/ev.py` computes box EV and swaps in real comps automatically once `tier_comps.csv` is populated.
+- **Data format:** checklists and odds sheets are published as articles/PDFs, not a structured API — so pulling this data means manual entry or scraping rather than a clean automated feed. The manual transcription is version-controlled in `src/build_raw_dataset.py`, which regenerates the CSVs.
 - **Odds accuracy:** the model assumes Topps' published odds reflect true pull rates. In reality, published odds are averages across a full print run — actual box-to-box variance can differ, especially for very low-probability chase cards (e.g., 1-of-1s).
 - **Scope constraint:** EV is calculated for a single box purchase only; group-split or box-break spot pricing is out of scope for this pilot (see Useful Answer & Decision).
 - **Compliance:** any scraping/pulling from eBay, CardHobby, or Beckett must respect each site's terms of service and rate limits.
@@ -59,9 +62,14 @@ Goal → Stage → Deliverable
 - Define the stakeholder, decision workflow, and risk factors → Problem Framing & Scoping (Stage 01) → Stakeholder & User, Known Unknowns/Risks, and Monitoring Plan sections (this README)
 - Set up a reproducible environment and project scaffold → Tooling Setup (Stage 02) → `requirements.txt`, `src/config.py`, and the `src/ notebooks/ data/ docs/ reports/ model/` tree (see Tooling & Setup)
 - Establish reusable NumPy/pandas helpers → Python Fundamentals (Stage 03) → `src/utils.py` (column cleaner, numeric coercion, summary + groupby helpers), demonstrated on dummy data in `notebooks/python_fundamentals_summary.ipynb`
-- Build the EV calculation CLI tool → later stage (post-Stage 03) → working CLI in `src/`
-- Generalize EV model → later stage (post-Stage 01) → support additional card sets/sports beyond Topps Chrome Update
-- Embed EV tool as web UI → later stage (post-Stage 01) → live feature on [AAA Card Shop](https://aaacardshop.com/)
+- Acquire the box/odds data by transcription → Data Acquisition (Stage 04) → `src/build_raw_dataset.py`, `data/raw/*.csv`
+- Store raw vs. processed data reproducibly → Data Storage (Stage 05) → `data/raw/` (immutable) + `data/processed/` convention, [docs/data_dictionary.md](docs/data_dictionary.md)
+- Clean the dataset with documented assumptions → Preprocessing (Stage 06) → `src/cleaning.py`
+- Detect and flag outliers without dropping chase tiers → Outliers & Risk (Stage 07) → `src/outliers.py`, `notebooks/sensitivity_outliers.ipynb`, [docs/outliers.md](docs/outliers.md)
+- Profile distributions and relationships → EDA (Stage 08) → `src/eda.py`, `notebooks/eda.ipynb`
+- Compute box EV and the buy/pass signal → core artifact, built from Stage 07 on → `src/ev.py` (CLI: `python src/ev.py [product_id]`), methodology in [docs/ev.md](docs/ev.md); outputs indicative until real comps replace the placeholder values
+- Generalize EV model → later stage → additional card sets/sports beyond the 2025-26 Topps NBA line
+- Embed EV tool as web UI → later stage → live feature on [AAA Card Shop](https://aaacardshop.com/)
 
 ## Tooling & Setup (Stage 02)
 
@@ -74,8 +82,8 @@ pip install -r project/requirements.txt
 ```
 
 `project/requirements.txt` is pinned from the project `.venv` and covers what the stages
-so far need — `python-dotenv`, `numpy`, `pandas`, `ipykernel`. It grows as later stages
-add libraries (scikit-learn, Flask, …).
+so far need — `python-dotenv`, `numpy`, `pandas`, `scipy`, `scikit-learn`, `matplotlib`,
+`seaborn`, `ipykernel`. It grows as later stages add libraries (Flask at Stage 13).
 
 **Config helper — `src/config.py`.** The one import point for paths and environment,
 moved in from the Stage 02 homework:
@@ -93,13 +101,12 @@ moved in from the Stage 02 homework:
 
 ## Repo Plan
 
-Built out as each stage needs it. `src/` holds `config.py` (Stage 02) and `utils.py` (Stage 03) so far.
+Built out as each stage needs it. Present as of Stage 08:
 
-- `src/` — reusable code: `config.py` (paths + env), `utils.py` (column cleaning, numeric coercion, summary/groupby helpers); EV calculation and odds/checklist parsing later
-- `notebooks/` — analysis and prototyping before logic is finalized into `src/`; `python_fundamentals_summary.ipynb` (Stage 03) is the first
-- `data/raw/`, `data/processed/` — transcribed checklist/odds sheets from [Beckett](https://www.beckett.com/news/2025-26-topps-chrome-update-basketball-cards/) and sold-comp pulls (eBay, CardHobby, CardLadder), and the rebuilt outputs derived from them
-- `docs/` — stakeholder artifact, data source log, and project notes
-- `reports/` — stakeholder-facing summaries and charts
-- `model/` — pickled model objects
+- `src/` — reusable code: `config.py` (paths + env), `utils.py` (column cleaning / numeric coercion / summary helpers), `build_raw_dataset.py` (transcribes the raw CSVs), and the stage helpers `cleaning.py`, `outliers.py`, `eda.py`. `ev.py` computes box EV per SKU (`EV/$` buy-pass ratio, `EV/pack`) and has a CLI — methodology in [docs/ev.md](docs/ev.md).
+- `notebooks/` — analysis and write-ups: `python_fundamentals_summary.ipynb`, `sensitivity_outliers.ipynb`, `eda.ipynb`, and `project_pipeline.ipynb`, the integration checkpoint that runs every `src/` helper top to bottom.
+- `data/raw/` — the working dataset, built by `src/build_raw_dataset.py`; schema in [docs/data_dictionary.md](docs/data_dictionary.md). `box_products.csv` (one row per box format: config, autos/box, any-auto & any-SSP odds, SRP + current retail price — 29 rows), `card_tiers.csv` (one row per hobby parallel/insert/auto tier: print run, pull odds, estimated value — ~190 rows), plus `tier_comps.csv` and `chase_cards.csv` for real sold comps (still to be populated). `data/processed/` holds rebuilt outputs from Stage 11 on.
+- `docs/` — methodology and notes: [`data_dictionary.md`](docs/data_dictionary.md), [`ev.md`](docs/ev.md), [`outliers.md`](docs/outliers.md).
+- `reports/`, `model/` — stakeholder deliverables and the pickled model; added at Stages 12–13.
 
 **Update cadence:** `data/` refreshed weekly per the Monitoring Plan; `src/`, `notebooks/`, and `docs/` updated as the tool and scoping evolve.
