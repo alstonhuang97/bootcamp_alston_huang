@@ -1,4 +1,4 @@
-# Hobby-Box EV Calculator — environment (through Stage 09: feature engineering).
+# Hobby-Box EV Calculator — environment (through Stage 11: evaluation & risk).
 # Pinned from the project .venv (Python 3.14). Grows as later stages add libraries.
 python-dotenv==1.2.3
 numpy==2.5.2

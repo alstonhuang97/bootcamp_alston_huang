@@ -1,7 +1,7 @@
 # Hobby Box Expected Value Calculator
 *Pilot: 2026 Topps Chrome Update Basketball*
 
-**Progress:** Stages 01–09 — Problem Framing → Tooling → Python Fundamentals → Data Acquisition → Storage → Preprocessing → Outliers & Risk → EDA → Feature Engineering
+**Progress:** Stages 01–11 — Problem Framing → Tooling → Python Fundamentals → Data Acquisition → Storage → Preprocessing → Outliers & Risk → EDA → Feature Engineering → Modeling (10a/10b) → Evaluation & Risk
 
 ## Problem Statement
 
@@ -69,7 +69,9 @@ Goal → Stage → Deliverable
 - Profile distributions and relationships → EDA (Stage 08) → `src/eda.py`, `notebooks/eda.ipynb`
 - Engineer EV-relevant features → Feature Engineering (Stage 09) → `src/features.py`, Engineered Features section below
 - Compute box EV and the buy/pass signal → core artifact, built from Stage 07 on → `src/ev.py` (CLI: `python src/ev.py [product_id]`), methodology in [docs/ev.md](docs/ev.md); outputs indicative until real comps replace the placeholder values
-- Model per-tier card value → later stage (post-Stage 09) → regression in `src/`, served via an API
+- Fit a per-tier value model and baselines → Modeling (Stage 10a linear regression · 10b classification) → `notebooks/modeling-linear-regression.ipynb`, `notebooks/modeling-time-series-and-classification.ipynb`
+- Quantify uncertainty and test assumptions → Evaluation & Risk Communication (Stage 11) → `src/evaluation.py`, `data/processed/scenario_results.csv`
+- Serve the value model via an API → later stage (Stage 13) → Flask app in `project/`
 - Generalize EV model → later stage → additional card sets/sports beyond the 2025-26 Topps NBA line
 - Embed EV tool as web UI → later stage → live feature on [AAA Card Shop](https://aaacardshop.com/)
 
@@ -103,11 +105,12 @@ moved in from the Stage 02 homework:
 
 ## Repo Plan
 
-Built out as each stage needs it. Present as of Stage 09:
+Built out as each stage needs it. Present as of Stage 11:
 
-- `src/` — reusable code. `config.py` (paths + env), `utils.py` (column cleaning / numeric coercion / summary helpers), `build_raw_dataset.py` (transcribes the raw CSVs), and the stage helpers `cleaning.py`, `outliers.py`, `eda.py`, `features.py`. `ev.py` computes box EV per SKU (`EV/$` buy-pass ratio, `EV/pack`) and has a CLI — methodology in [docs/ev.md](docs/ev.md).
-- `notebooks/` — analysis and write-ups: `python_fundamentals_summary.ipynb`, `eda.ipynb`, `sensitivity_outliers.ipynb`, and `project_pipeline.ipynb`, the integration checkpoint that runs every `src/` helper top to bottom.
-- `data/raw/` — the working dataset, built by `src/build_raw_dataset.py`; schema in [docs/data_dictionary.md](docs/data_dictionary.md). `box_products.csv` (one row per box format: config, autos/box, any-auto & any-SSP odds, SRP + current retail price — 29 rows), `card_tiers.csv` (one row per hobby parallel/insert/auto tier: print run, pull odds, estimated value — ~190 rows), plus `tier_comps.csv` and `chase_cards.csv` for real sold comps (still to be populated). `data/processed/` holds rebuilt outputs from Stage 11 on.
+- `src/` — reusable code. `config.py` (paths + env), `utils.py` (column cleaning / numeric coercion / summary helpers), `build_raw_dataset.py` (transcribes the raw CSVs), and the stage helpers `cleaning.py`, `outliers.py`, `eda.py`, `features.py`, `evaluation.py`. `ev.py` computes box EV per SKU (`EV/$` buy-pass ratio, `EV/pack`) and has a CLI — methodology in [docs/ev.md](docs/ev.md).
+- `notebooks/` — analysis and write-ups: `python_fundamentals_summary.ipynb`, `eda.ipynb`, `sensitivity_outliers.ipynb`, `modeling-linear-regression.ipynb`, `modeling-time-series-and-classification.ipynb`, and `project_pipeline.ipynb`, the integration checkpoint that runs every `src/` helper top to bottom.
+- `data/raw/` — the working dataset, built by `src/build_raw_dataset.py`; schema in [docs/data_dictionary.md](docs/data_dictionary.md). `box_products.csv` (one row per box format: config, autos/box, any-auto & any-SSP odds, SRP + current retail price — 29 rows), `card_tiers.csv` (one row per hobby parallel/insert/auto tier: print run, pull odds, estimated value — ~190 rows), plus `tier_comps.csv` and `chase_cards.csv` for real sold comps (still to be populated).
+- `data/processed/` — rebuilt outputs; `scenario_results.csv` (Stage 11 assumption-sensitivity scenarios) so far.
 - `docs/` — methodology and notes: [`data_dictionary.md`](docs/data_dictionary.md), [`ev.md`](docs/ev.md), [`outliers.md`](docs/outliers.md).
 - `reports/`, `model/` — stakeholder deliverables and the pickled model; added at Stages 12–13.
 
