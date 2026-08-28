@@ -1,7 +1,7 @@
 # Hobby Box Expected Value Calculator
 *Pilot: 2026 Topps Chrome Update Basketball*
 
-**Progress:** Stages 01–08 — Problem Framing → Tooling → Python Fundamentals → Data Acquisition → Storage → Preprocessing → Outliers & Risk → EDA
+**Progress:** Stages 01–09 — Problem Framing → Tooling → Python Fundamentals → Data Acquisition → Storage → Preprocessing → Outliers & Risk → EDA → Feature Engineering
 
 ## Problem Statement
 
@@ -33,7 +33,7 @@ Artifact: a command-line tool that takes a box price and odds/checklist data as 
 - **Data format:** checklists and odds sheets are published as articles/PDFs, not a structured API — so pulling this data means manual entry or scraping rather than a clean automated feed. The manual transcription is version-controlled in `src/build_raw_dataset.py`, which regenerates the CSVs.
 - **Odds accuracy:** the model assumes Topps' published odds reflect true pull rates. In reality, published odds are averages across a full print run — actual box-to-box variance can differ, especially for very low-probability chase cards (e.g., 1-of-1s).
 - **Scope constraint:** EV is calculated for a single box purchase only; group-split or box-break spot pricing is out of scope for this pilot (see Useful Answer & Decision).
-- **Compliance:** any scraping/pulling from eBay, CardHobby, or Beckett must respect each site's terms of service and rate limits.
+- **Compliance:** any scraping or automated pulls from checklistinsider.com, blowoutcards.com, eBay, or CardLadder must respect each site's terms of service and rate limits.
 
 ## Known Unknowns / Risks
 
@@ -62,12 +62,14 @@ Goal → Stage → Deliverable
 - Define the stakeholder, decision workflow, and risk factors → Problem Framing & Scoping (Stage 01) → Stakeholder & User, Known Unknowns/Risks, and Monitoring Plan sections (this README)
 - Set up a reproducible environment and project scaffold → Tooling Setup (Stage 02) → `requirements.txt`, `src/config.py`, and the `src/ notebooks/ data/ docs/ reports/ model/` tree (see Tooling & Setup)
 - Establish reusable NumPy/pandas helpers → Python Fundamentals (Stage 03) → `src/utils.py` (column cleaner, numeric coercion, summary + groupby helpers), demonstrated on dummy data in `notebooks/python_fundamentals_summary.ipynb`
-- Acquire the box/odds data by transcription → Data Acquisition (Stage 04) → `src/build_raw_dataset.py`, `data/raw/*.csv`
+- Acquire the box/odds data programmatically and by transcription → Data Acquisition (Stage 04) → `src/build_raw_dataset.py`, `data/raw/*.csv`
 - Store raw vs. processed data reproducibly → Data Storage (Stage 05) → `data/raw/` (immutable) + `data/processed/` convention, [docs/data_dictionary.md](docs/data_dictionary.md)
 - Clean the dataset with documented assumptions → Preprocessing (Stage 06) → `src/cleaning.py`
 - Detect and flag outliers without dropping chase tiers → Outliers & Risk (Stage 07) → `src/outliers.py`, `notebooks/sensitivity_outliers.ipynb`, [docs/outliers.md](docs/outliers.md)
 - Profile distributions and relationships → EDA (Stage 08) → `src/eda.py`, `notebooks/eda.ipynb`
+- Engineer EV-relevant features → Feature Engineering (Stage 09) → `src/features.py`, Engineered Features section below
 - Compute box EV and the buy/pass signal → core artifact, built from Stage 07 on → `src/ev.py` (CLI: `python src/ev.py [product_id]`), methodology in [docs/ev.md](docs/ev.md); outputs indicative until real comps replace the placeholder values
+- Model per-tier card value → later stage (post-Stage 09) → regression in `src/`, served via an API
 - Generalize EV model → later stage → additional card sets/sports beyond the 2025-26 Topps NBA line
 - Embed EV tool as web UI → later stage → live feature on [AAA Card Shop](https://aaacardshop.com/)
 
@@ -83,7 +85,7 @@ pip install -r project/requirements.txt
 
 `project/requirements.txt` is pinned from the project `.venv` and covers what the stages
 so far need — `python-dotenv`, `numpy`, `pandas`, `scipy`, `scikit-learn`, `matplotlib`,
-`seaborn`, `ipykernel`. It grows as later stages add libraries (Flask at Stage 13).
+`seaborn`, `ipykernel`. It grows as later stages add libraries (e.g. Flask at Stage 13).
 
 **Config helper — `src/config.py`.** The one import point for paths and environment,
 moved in from the Stage 02 homework:
@@ -101,12 +103,23 @@ moved in from the Stage 02 homework:
 
 ## Repo Plan
 
-Built out as each stage needs it. Present as of Stage 08:
+Built out as each stage needs it. Present as of Stage 09:
 
-- `src/` — reusable code: `config.py` (paths + env), `utils.py` (column cleaning / numeric coercion / summary helpers), `build_raw_dataset.py` (transcribes the raw CSVs), and the stage helpers `cleaning.py`, `outliers.py`, `eda.py`. `ev.py` computes box EV per SKU (`EV/$` buy-pass ratio, `EV/pack`) and has a CLI — methodology in [docs/ev.md](docs/ev.md).
-- `notebooks/` — analysis and write-ups: `python_fundamentals_summary.ipynb`, `sensitivity_outliers.ipynb`, `eda.ipynb`, and `project_pipeline.ipynb`, the integration checkpoint that runs every `src/` helper top to bottom.
+- `src/` — reusable code. `config.py` (paths + env), `utils.py` (column cleaning / numeric coercion / summary helpers), `build_raw_dataset.py` (transcribes the raw CSVs), and the stage helpers `cleaning.py`, `outliers.py`, `eda.py`, `features.py`. `ev.py` computes box EV per SKU (`EV/$` buy-pass ratio, `EV/pack`) and has a CLI — methodology in [docs/ev.md](docs/ev.md).
+- `notebooks/` — analysis and write-ups: `python_fundamentals_summary.ipynb`, `eda.ipynb`, `sensitivity_outliers.ipynb`, and `project_pipeline.ipynb`, the integration checkpoint that runs every `src/` helper top to bottom.
 - `data/raw/` — the working dataset, built by `src/build_raw_dataset.py`; schema in [docs/data_dictionary.md](docs/data_dictionary.md). `box_products.csv` (one row per box format: config, autos/box, any-auto & any-SSP odds, SRP + current retail price — 29 rows), `card_tiers.csv` (one row per hobby parallel/insert/auto tier: print run, pull odds, estimated value — ~190 rows), plus `tier_comps.csv` and `chase_cards.csv` for real sold comps (still to be populated). `data/processed/` holds rebuilt outputs from Stage 11 on.
 - `docs/` — methodology and notes: [`data_dictionary.md`](docs/data_dictionary.md), [`ev.md`](docs/ev.md), [`outliers.md`](docs/outliers.md).
 - `reports/`, `model/` — stakeholder deliverables and the pickled model; added at Stages 12–13.
 
 **Update cadence:** `data/` refreshed weekly per the Monitoring Plan; `src/`, `notebooks/`, and `docs/` updated as the tool and scoping evolve.
+
+## Engineered Features (Stage 09)
+
+`src/features.py`, applied to `data/raw/card_tiers.csv` (one row per hobby-box tier) merged with `packs_per_box` from `box_products.csv`:
+
+| feature | definition | why |
+|---|---|---|
+| `expected_hits_per_box` | `packs_per_box / odds_pack` | expected count of this tier per box — the weight the EV formula ([docs/ev.md](docs/ev.md)) multiplies by card value. NaN where only card-level odds are published. |
+| `log_odds_pack` | `log10(odds_pack)` | raw odds span 1:3–1:2,000,000; scarcity is multiplicative, so a linear model on the raw scale fails (hw07). Log makes each rarity step ~constant distance. |
+| `tg_*` | one-hot of `tier_group` (base / parallel / insert / auto / variation) | nominal, no order, 5 levels → one-hot keeps each type as its own signal (label fakes an ordinal; frequency conflates similar-count types). |
+| `is_chase` *(optional)* | IQR-outlier flag on `odds_pack` (reuses `src/outliers.py`) | marks the rare tiers that carry most of a box's EV; kept, never removed ([docs/outliers.md](docs/outliers.md)). |
