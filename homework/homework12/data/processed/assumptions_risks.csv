@@ -1,0 +1,6 @@
+assumption,baseline,alternate,effect_on_decision
+Card values = rough_estimate_v0 ladder (6 real eBay comps),EV as reported,x0.5 / x2 card values,"Premium boxes stay PASS even at x2; NBA Hoops stays BUY even at x0.5 -> ranking robust, absolute EV is indicative"
+Missing pull-odds imputed by column mean,value-model slope 0.669,median / drop  (data/processed/scenario_results.csv),slope 0.669 / 0.670 / 0.669 -> no change
+EV is a mean; box outcomes are right-skewed,report EV,report median / P(beat price),"most boxes return BELOW EV; only buy when EV/$ is comfortably >1, not marginally"
+Non-Hobby EV omits the parallel rainbow,autos+SSP+base only,full tier ladder (not yet transcribed),non-Hobby EV/$ shown are LOWER BOUNDS; true values modestly higher
+Prices are one street-price snapshot (2026-08-28),blowoutcards / SRP,live market feed,hot-box prices move weekly; re-run before acting
