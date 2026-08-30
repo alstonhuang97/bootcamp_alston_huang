@@ -1,5 +1,4 @@
-# Hobby-Box EV Calculator — environment (through Stage 13: productization).
-# Pinned from the project .venv (Python 3.14). Grows as later stages add libraries.
+# Hobby-Box EV Calculator -- runtime + notebook deps, pinned from the project .venv (Python 3.14).
 python-dotenv==1.2.3
 numpy==2.5.2
 pandas==3.0.5
