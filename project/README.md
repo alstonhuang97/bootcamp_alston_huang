@@ -200,6 +200,28 @@ cd project
 4. **CLI EV table** — `python src/ev.py` (ranked table) or `python src/ev.py <product_id>`
    (one SKU breakdown).
 
+## Run one pipeline step (Stage 15)
+
+`src/run_step.py` runs a single orchestration task from the command line, with logging and
+a linear-backoff retry. The full task list and DAG are in
+[`docs/orchestration_plan.md`](docs/orchestration_plan.md).
+
+```bash
+cd project
+python src/run_step.py ev_report            # recompute data/processed/ev_report.csv
+python src/run_step.py ev_report --base-card-value 0.10 --out /tmp/ev.csv -v
+python src/run_step.py --help
+```
+
+Output (INFO to stderr):
+```
+... INFO run_step: ev_report: start  base_card_value=0.20
+... INFO run_step: ev_report: wrote data/processed/ev_report.csv  rows=29  positive_ev=3  (0.30s)
+```
+
+It is idempotent — re-running overwrites the same file with the same content. Exit code 0
+on success, 1 on failure.
+
 > **Port 5001, not 5000.** On macOS the Control Center / AirPlay Receiver also listens on
 > 5000 and answers first (HTTP 403). Change the port in `app.py` (`app.run(port=...)`) and
 > in the notebook `BASE` if 5001 is taken.
